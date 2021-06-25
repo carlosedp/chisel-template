@@ -1,0 +1,151 @@
+CAPI=2:
+
+name: $username$::$project_name$:0
+
+filesets:
+  proginfo:
+    files: [proginfo/proginfo.py : {file_type : user, copyto : proginfo.py}]
+
+  polarfireeval:
+    depend: ["fusesoc:utils:generators:0.1.6"]
+    files:
+      - constraints/polarfire_evaluation.pdc: { file_type: PDC }
+
+  ulx3s-85:
+    depend: ["fusesoc:utils:generators:0.1.6"]
+    files:
+      - constraints/ecp5-ulx3s.lpf: { file_type: LPF }
+      - openocd/ft231x.cfg: { file_type: user }
+      - openocd/LFE5U-85F.cfg: { file_type: user }
+      - proginfo/ulx3s.txt: { file_type: user }
+
+  artya7-35t:
+    depend: ["fusesoc:utils:generators:0.1.6"]
+    files:
+      - constraints/arty_a7.xdc: { file_type: xdc }
+      - openocd/digilent-hs1.cfg: { file_type: user }
+      - openocd/xilinx-xc7.cfg: { file_type: user }
+      - proginfo/artix7.txt: { file_type: user }
+
+  de1_soc_revF:
+    depend: ["fusesoc:utils:generators:0.1.6"]
+    files:
+      - constraints/de1_soc_revF.sdc: { file_type: SDC }
+      - constraints/de1_soc_revF.tcl: { file_type: tclSource }
+
+generate:
+  polarfireeval:
+    generator: chisel
+    parameters:
+      extraargs: "-board polarfireeval"
+      chiselproject: toplevel
+      copy_core: true
+      output:
+        files:
+          - generated/Toplevel.v: { file_type: verilogSource }
+          - generated/pll_polarfireeval.v: { file_type: verilogSource }
+
+  ulx3s:
+    generator: chisel
+    parameters:
+      extraargs: "-board ulx3s"
+      chiselproject: toplevel
+      copy_core: true
+      output:
+        files:
+          - generated/Toplevel.v: { file_type: verilogSource }
+          - generated/pll_ulx3s.v: { file_type: verilogSource }
+
+  artya7-35t:
+    generator: chisel
+    parameters:
+      extraargs: "-board artya7-35t -invreset false"
+      chiselproject: toplevel
+      copy_core: true
+      output:
+        files:
+          - generated/Toplevel.v: { file_type: verilogSource }
+          - generated/pll_artya7-35t.v: { file_type: verilogSource }
+
+  de1_soc_revF:
+    generator: chisel
+    parameters:
+      extraargs: "-board de1_soc_revF"
+      chiselproject: toplevel
+      copy_core: true
+      output:
+        files:
+          - generated/Toplevel.v: { file_type: verilogSource }
+          - generated/pll_de1_soc_revF.v: { file_type: verilogSource }
+
+targets:
+  polarfireeval_es:
+    default_tool: libero
+    description: Microsemi Polarfire Evaluation Kit (ES)
+    filesets: [polarfireeval]
+    generate: [polarfireeval]
+    tools:
+      libero:
+        family: PolarFire
+        die: MPF300TS_ES
+        package: FCG1152
+    toplevel: Toplevel
+
+  ulx3s_85:
+    default_tool: trellis
+    description: ULX3S 85k version
+    filesets: [ulx3s-85, proginfo]
+    generate: [ulx3s]
+    hooks:
+      post_run: [ulx3s-85f]
+    tools:
+      diamond:
+        part: LFE5U-85F-6BG381C
+      trellis:
+        nextpnr_options: [--package, CABGA381, --85k]
+    toplevel: Toplevel
+
+  artya7-35t:
+    default_tool : vivado
+    description: Digilent ArtyA7-35T Board
+    filesets : [artya7-35t]
+    generate: [artya7-35t]
+    tools:
+      vivado:
+        part : xc7a35ticsg324-1L
+    toplevel : Toplevel
+
+  artya7-35t-oss:
+    default_tool : symbiflow
+    description: Digilent ArtyA7-35T Board using Symbiflow OSS Toolchain
+    filesets : [artya7-35t, proginfo]
+    generate: [artya7-35t]
+    hooks:
+      post_run: [artya7-35t]
+    tools:
+      symbiflow:
+        part : xc7a35t
+        package: csg324-1
+        vendor: xilinx
+        pnr: vtr
+    toplevel : Toplevel
+
+  de1_soc_revF:
+    default_tool : quartus
+    description: Altera Cyclone V DE1_SoC board, revision F
+    filesets : [de1_soc_revF]
+    generate : [de1_soc_revF]
+    tools:
+      quartus:
+        family : Cyclone V
+        device : 5CSEMA5F31C6
+        board_device_index : 2
+    toplevel: Toplevel
+
+scripts:
+  artya7-35t:
+    cmd : [python3, proginfo.py, artya7-35t]
+  dfu-util:
+    cmd : [python3, proginfo.py, dfu-util]
+  ulx3s-85f:
+    cmd : [python3, proginfo.py, ulx3s-85f]
