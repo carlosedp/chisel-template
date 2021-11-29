@@ -1,21 +1,22 @@
-# Chisel3 Template Project
+# Chisel Template
 
-The Requirements to run Chisel are:
+This is a simple template project to demonstrate Chisel functionality with build scripts
+and tooling.
 
-- A Java JDK
-- SBT (Scala Build Tool)
+The project includes a simple module (to be replaced with your design) and also have a test spec.
 
-To install, follow [this page](https://java.com/en/download/help/download_options.html) to install Java and [this page](https://www.scala-sbt.org/1.x/docs/Setup.html) to install SBT.
+## Generating Verilog
 
-To create a project based on this template, run:
-
-```sh
-sbt new carlosedp/chisel-template.g8
-```
-
-or using g8:
+Verilog code can be generated from Chisel by using the `chisel` Makefile target.
 
 ```sh
-# Install g8 utility using Coursier
-g8 carlosedp/chisel-template.g8
+make chisel
 ```
+
+Running tests can be done with:
+
+```sh
+make test
+```
+
+The project supports building with SBT (Scala Build Tool) by default but also Mill if passing the parameter to make like `make chisel BUILDTOOL=mill` or `make test BUILDTOOL=mill`.

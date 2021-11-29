@@ -2,7 +2,7 @@ import mill._
 import mill.scalalib._
 import scalafmt._
 import coursier.maven.MavenRepository
-import \$ivy.`com.goyeau::mill-scalafix:0.2.4`
+import $ivy.`com.goyeau::mill-scalafix:0.2.4`
 import com.goyeau.mill.scalafix.ScalafixModule
 
 val defaultVersions = Map(
@@ -27,19 +27,19 @@ trait BaseProject extends ScalaModule {
 
 trait HasChisel3 extends ScalaModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
-    ivy"edu.berkeley.cs::chisel3:\${defaultVersions("chisel3")}",
-    ivy"com.carlosedp::scalautils:\${defaultVersions("scalautils")}"
+    ivy"edu.berkeley.cs::chisel3:${defaultVersions("chisel3")}",
+    ivy"com.carlosedp::scalautils:${defaultVersions("scalautils")}"
   )
   override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
-    ivy"edu.berkeley.cs:::chisel3-plugin:\${defaultVersions("chisel3")}"
+    ivy"edu.berkeley.cs:::chisel3-plugin:${defaultVersions("chisel3")}"
   )
 }
 
 trait HasChiselTests extends CrossSbtModule {
   object test extends Tests {
     def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"org.scalatest::scalatest:\${defaultVersions("scalatest")}",
-      ivy"edu.berkeley.cs::chiseltest:\${defaultVersions("chiseltest")}"
+      ivy"org.scalatest::scalatest:${defaultVersions("scalatest")}",
+      ivy"edu.berkeley.cs::chiseltest:${defaultVersions("chiseltest")}"
     )
 
     def testFramework = "org.scalatest.tools.Framework"
@@ -51,7 +51,7 @@ trait HasChiselTests extends CrossSbtModule {
 }
 
 trait CodeQuality extends ScalafixModule with ScalafmtModule {
-  def scalafixIvyDeps = Agg(ivy"com.github.liancheng::organize-imports:\${defaultVersions("organize-imports")}")
+  def scalafixIvyDeps = Agg(ivy"com.github.liancheng::organize-imports:${defaultVersions("organize-imports")}")
   override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
     ivy"org.scalameta:::semanticdb-scalac:4.4.28"
   )

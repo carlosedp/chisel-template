@@ -1,12 +1,12 @@
-ThisBuild / organization := "$org$"
-ThisBuild / description  := "$name$"
-ThisBuild / homepage     := Some(url("$url$"))
+ThisBuild / organization := "myorganization"
+ThisBuild / description  := "Chisel3 Template Project"
+ThisBuild / homepage     := Some(url("https://project.url"))
 ThisBuild / licenses     := Seq("MIT" -> url("https://opensource.org/licenses/BSD-3-Clause"))
 ThisBuild / scmInfo := Some(
-  ScmInfo(url("$url$"), "git@github.com:myorg/sample.git")
+  ScmInfo(url("https://github.com/myuser/proj"), "git@github.com:myorg/sample.git")
 )
 ThisBuild / developers := List(
-  Developer("$username$", "My Name", "me@email", url("https://github.com/$username$"))
+  Developer("myuser", "My Name", "me@email", url("https://github.com/myuser"))
 )
 Global / semanticdbEnabled    := true
 Global / semanticdbVersion    := "4.4.28" //scalafixSemanticdb.revision // Force version due to compatibility issues
@@ -18,7 +18,7 @@ Test / logBuffered := false
 
 lazy val toplevel = (project in file("."))
   .settings(
-    name         := "$project_name$",
+    name         := "project",
     version      := "0.0.1",
     scalaVersion := "2.13.6"
   )
