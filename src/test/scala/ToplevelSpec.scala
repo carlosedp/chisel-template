@@ -11,8 +11,8 @@ class ToplevelSpec extends AnyFlatSpec with ChiselScalatestTester with should.Ma
   it should "have the output equal to input" in {
     test(new Toplevel()).withAnnotations(
       Seq(
-        WriteVcdAnnotation,
-        VerilatorBackendAnnotation
+        WriteVcdAnnotation
+        // VerilatorBackendAnnotation // If you want to use Verilator backend
       )
     ) { c =>
       c.io.out.expect(false.B)
