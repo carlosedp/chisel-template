@@ -8,11 +8,11 @@ ThisBuild / scmInfo := Some(
 ThisBuild / developers := List(
   Developer("myuser", "My Name", "me@email", url("https://github.com/myuser"))
 )
-Global / semanticdbEnabled    := true
-Global / semanticdbVersion    := "4.4.28" //scalafixSemanticdb.revision // Force version due to compatibility issues
-Global / onChangedBuildSource := ReloadOnSourceChanges
+ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % defaultVersions("organize-imports")
 
-ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+Global / semanticdbEnabled    := true
+Global / semanticdbVersion    := defaultVersions("semanticdb")
+Global / onChangedBuildSource := ReloadOnSourceChanges
 
 Test / logBuffered := false
 
@@ -20,16 +20,19 @@ lazy val toplevel = (project in file("."))
   .settings(
     name         := "project",
     version      := "0.0.1",
-    scalaVersion := "2.13.6"
+    scalaVersion := defaultVersions("scala")
   )
 
 // Default library versions
 val defaultVersions = Map(
-  "chisel3" -> "3.5.0-RC1",
-  // "chisel3"    -> "3.5-SNAPSHOT", // Opt for Chisel3 snapshots
-  "chiseltest" -> "0.5-SNAPSHOT",
-  "scalatest"  -> "3.2.10",
-  "scalautils" -> "0.7.+"
+  "scala"            -> "2.13.6",
+  "chisel3"          -> "3.5.0-RC1",
+  "chiseltest"       -> "0.5-SNAPSHOT",
+  "scalatest"        -> "3.2.10",
+  "scalautils"       -> "0.7.2",
+  "semanticdb"       -> "4.4.30",
+  "organize-imports" -> "0.6.0",
+  "os-lib"           -> "0.7.8"
 )
 
 // Import libraries
@@ -38,8 +41,7 @@ libraryDependencies ++= Seq(
   "edu.berkeley.cs" %% "chiseltest" % defaultVersions("chiseltest") % "test",
   "org.scalatest"   %% "scalatest"  % defaultVersions("scalatest")  % "test",
   "com.carlosedp"   %% "scalautils" % defaultVersions("scalautils"),
-  "com.lihaoyi"     %% "os-lib"     % "0.7.8",
-  "edu.berkeley.cs" %% "firrtl"     % "1.5-SNAPSHOT" // Force using SNAPSHOT until next RC is cut (memory synth)
+  "com.lihaoyi"     %% "os-lib"     % defaultVersions("os-lib")
 )
 addCompilerPlugin(("edu.berkeley.cs" % "chisel3-plugin" % defaultVersions("chisel3")).cross(CrossVersion.full))
 
@@ -53,7 +55,8 @@ addCommandAlias("deps", "dependencyUpdates")
 
 resolvers ++= Seq(
   Resolver.sonatypeRepo("snapshots"),
-  Resolver.sonatypeRepo("releases")
+  Resolver.sonatypeRepo("releases"),
+  "Sonatype New OSS Snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots"
 )
 
 scalacOptions ++= Seq(

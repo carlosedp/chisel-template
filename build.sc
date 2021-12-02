@@ -10,13 +10,19 @@ val defaultVersions = Map(
   "chisel3"          -> "3.5.0-RC1",
   "chiseltest"       -> "0.5-SNAPSHOT",
   "scalatest"        -> "3.2.10",
-  "organize-imports" -> "0.5.0",
-  "scalautils"       -> "0.7.2"
+  "scalautils"       -> "0.7.2",
+  "semanticdb"       -> "4.4.30",
+  "organize-imports" -> "0.6.0",
+  "os-lib"           -> "0.7.8"
 )
 
 trait BaseProject extends ScalaModule {
   def crossScalaVersion = defaultVersions("scala")
-  def mainClass         = Some("Toplevel")
+  def mainClass         = Some("chiselv.Toplevel")
+  def ivyDeps = super.ivyDeps() ++ Agg(
+    ivy"com.carlosedp::scalautils:${defaultVersions("scalautils")}",
+    ivy"com.lihaoyi::os-lib:${defaultVersions("os-lib")}"
+  )
   def repositoriesTask = T.task {
     super.repositoriesTask() ++ Seq(
       MavenRepository("https://oss.sonatype.org/content/repositories/snapshots"),
@@ -27,8 +33,7 @@ trait BaseProject extends ScalaModule {
 
 trait HasChisel3 extends ScalaModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
-    ivy"edu.berkeley.cs::chisel3:${defaultVersions("chisel3")}",
-    ivy"com.carlosedp::scalautils:${defaultVersions("scalautils")}"
+    ivy"edu.berkeley.cs::chisel3:${defaultVersions("chisel3")}"
   )
   override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
     ivy"edu.berkeley.cs:::chisel3-plugin:${defaultVersions("chisel3")}"
@@ -53,12 +58,15 @@ trait HasChiselTests extends CrossSbtModule {
 trait CodeQuality extends ScalafixModule with ScalafmtModule {
   def scalafixIvyDeps = Agg(ivy"com.github.liancheng::organize-imports:${defaultVersions("organize-imports")}")
   override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
-    ivy"org.scalameta:::semanticdb-scalac:4.4.28"
+    ivy"org.scalameta:::semanticdb-scalac:${defaultVersions("semanticdb")}"
   )
 }
 
 trait Aliases extends Module {
-  def fmt() = T.command {
+  def fmt = T {
+    toplevel.reformat()
+  }
+  def lint = T {
     toplevel.reformat()
     toplevel.fix()
   }
