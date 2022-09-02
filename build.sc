@@ -1,4 +1,5 @@
 import mill._, mill.scalalib._
+import mill.scalalib.TestModule.ScalaTest
 import scalafmt._
 import coursier.maven.MavenRepository
 import $ivy.`com.goyeau::mill-scalafix::0.2.10`
@@ -15,8 +16,6 @@ object versions {
 
 trait BaseProject extends ScalaModule {
   def scalaVersion = versions.scala
-  def mainClass    = Some("Toplevel")
-
   def repositoriesTask = T.task { // Add snapshot repositories in case needed
     super.repositoriesTask() ++ Seq("oss", "s01.oss")
       .map(r => s"https://$r.sonatype.org/content/repositories/snapshots")
@@ -31,13 +30,13 @@ trait BaseProject extends ScalaModule {
   override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
     ivy"edu.berkeley.cs:::chisel3-plugin:${versions.chisel3}",
   )
-  object test extends Tests {
+  object test extends Tests with TestModule.ScalaTest {
     // Define the project test dependencies
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"org.scalatest::scalatest:${versions.scalatest}",
       ivy"edu.berkeley.cs::chiseltest:${versions.chiseltest}",
     )
-    def testFramework = "org.scalatest.tools.Framework"
+
     def testOne(args: String*) = T.command {
       super.runMain("org.scalatest.run", args: _*)
     }
@@ -79,5 +78,10 @@ def deps(ev: eval.Evaluator) = T.command {
   mill.scalalib.Dependency.showUpdates(ev)
 }
 
-// Final object definition
-object toplevel extends ScalaModule with BaseProject with CodeQuality with ScalacOptions {}
+// Final object definition name matches the sources/tests directory
+object toplevel extends ScalaModule with BaseProject with CodeQuality with ScalacOptions {
+  // This is the name of your main class (instantiated as `object x extends App`)
+  def mainClass = Some("Toplevel")
+  // Matches your project directory where sources and tests are placed
+  def projectName = "toplevel"
+}
