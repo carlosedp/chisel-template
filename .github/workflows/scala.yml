@@ -21,7 +21,9 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '11'
-        cache: 'java'
+
+    - uses: coursier/cache-action@v6
+      id: coursier-cache
 
     - name: Run automated tests
       run: make test
