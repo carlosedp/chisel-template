@@ -1,20 +1,11 @@
 # Source and target files/directories
-project = $(shell grep object build.sc |grep -v extends |sed s/object//g |xargs)
-scala_files = $(wildcard src/main/scala/*.scala)
+project = $(shell grep object build.sc |tail -1 |cut -d" " -f2 |xargs)
+scala_files = $(wildcard $(project)/*/*.scala)
 generated_files = generated					# Destination directory for generated files
-BUILDTOOL ?= sbt 							# Can also be mill
 
-# Toolchains
+# Toolchains and tools
+MILL = ./mill
 DOCKERARGS  = run --rm -v $(PWD):/src -w /src
-SBTIMAGE   = docker $(DOCKERARGS) adoptopenjdk:8u282-b08-jre-hotspot
-SBTCMD   = $(SBTIMAGE) curl -Ls https://git.io/sbt > /tmp/sbt && chmod 0775 /tmp/sbt && /tmp/sbt
-SBTLOCAL := $(shell command -v sbt 2> /dev/null)
-ifndef SBTLOCAL
-    SBT=${SBTCMD}
-else
-	SBT=sbt
-endif
-
 # Define utility applications
 # VERILATOR= docker $(DOCKERARGS) hdlc/verilator verilator	# Docker Verilator
 VERILATOR=verilator  # Local Verilator
@@ -25,29 +16,26 @@ BOARD := bypass
 #	BOARDPARAMS=-board ${BOARD} -cpufreq 25000000 -invreset false
 
 # Targets
-chisel: $(generated_files) ## Generates Verilog code from Chisel sources using SBT
+chisel: $(generated_files) ## Generates Verilog code from Chisel sources (output to ./generated)
 
-$(generated_files): $(scala_files) build.sc build.sbt
+$(generated_files): $(scala_files) build.sc #checkboard
 	@rm -rf $(generated_files)
+	$(MILL) $(project).run --target:fpga -td $(generated_files) $(BOARDPARAMS)
+
+checkboard:
 	@test "$(BOARD)" != "bypass" || (echo "Set BOARD variable to one of the supported boards: " ; test -f file.core && cat file.core|grep "\-board" |cut -d '-' -f 2|sed s/\"//g | sed s/board\ //g |tr -s '\n' ','| sed 's/,$$/\n/'; echo "Eg. make chisel BOARD=ulx3s"; echo; echo "Generating design with bypass PLL..."; echo)
-	@if [ $(BUILDTOOL) = "sbt" ]; then \
-		${SBT} "run --target:fpga -td $(generated_files) $(BOARDPARAMS)"; \
-    elif [ $(BUILDTOOL) = "mill" ]; then \
-		scripts/mill $(project).run --target:fpga -td $(generated_files) $(BOARDPARAMS); \
-	fi
 
-chisel_tests:
-	@if [ $(BUILDTOOL) = "sbt" ]; then \
-		${SBT} "test"; \
-    elif [ $(BUILDTOOL) = "mill" ]; then \
-		scripts/mill $(project).test; \
-	fi
+check: test
+test: ## Run Chisel tests
+	$(MILL) $(project).test
+	@echo "If using WriteVcdAnnotation in your tests, the VCD files are generated in ./test_run_dir/testname directories."
 
-test: chisel_tests ## Run Chisel tests
-check: chisel_tests
 
-fmt: ## Formats code using scalafmt and scalafix
-	${SBT} lint
+lint: ## Formats code using scalafmt and scalafix
+	$(MILL) lint
+
+deps: ## Check for library version updates
+	$(MILL) deps
 
 MODULE ?= Toplevel
 dot: $(generated_files) ## Generate dot files for Core
@@ -55,13 +43,13 @@ dot: $(generated_files) ## Generate dot files for Core
 	@$(YOSYS) -p "read_verilog ./generated/*.v; proc; opt; show -colors 2 -width -format dot -prefix $(MODULE) -signed $(MODULE)"
 
 clean:   ## Clean all generated files
+	$(MILL) clean
 	@rm -rf obj_dir test_run_dir target
 	@rm -rf $(generated_files)
 	@rm -rf out
-	@rm -f chiselv
 	@rm -f *.mem
 
-cleancache: clean  ## Clean all downloaded dependencies and cache
+cleanall: clean  ## Clean all downloaded dependencies, cache and generated files
 	@rm -rf project/.bloop
 	@rm -rf project/project
 	@rm -rf project/target

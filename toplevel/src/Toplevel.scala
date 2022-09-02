@@ -17,7 +17,7 @@ object Toplevel extends App {
   val verilog =
     (new chisel3.stage.ChiselStage).emitVerilog(
       new Toplevel(),
-      args
+      args,
     )
   // Print the generated Verilog code to the console
   // println(verilog)
