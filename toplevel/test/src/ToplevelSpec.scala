@@ -11,9 +11,9 @@ class ToplevelSpec extends AnyFlatSpec with ChiselScalatestTester with GivenWhen
   it should "have the output equal to input" in {
     test(new Toplevel()).withAnnotations(
       Seq(
-        WriteVcdAnnotation
-        // VerilatorBackendAnnotation // Uncomment to use the Verilator backend
-      )
+        WriteVcdAnnotation,
+        // VerilatorBackendAnnotation, // Uncomment to use the Verilator backend
+      ),
     ) { c =>
       c.io.out.peekBoolean() should be(false)
       c.clock.step()

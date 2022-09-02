@@ -14,25 +14,26 @@ object versions {
   val semanticdb      = "4.5.13"
 }
 
-trait BaseProject extends CrossSbtModule {
-  def crossScalaVersion       = "2.13.8"
-  def mainClass               = Some("Toplevel")
-  override def millSourcePath = super.millSourcePath
+trait BaseProject extends ScalaModule {
+  def scalaVersion = "2.13.8"
+  def mainClass    = Some("Toplevel")
+
   def repositoriesTask = T.task {
     super.repositoriesTask() ++ Seq("oss", "s01.oss")
       .map("https://" + _ + ".sonatype.org/content/repositories/snapshots")
       .map(MavenRepository(_))
   }
-}
 
-trait HasChisel3 extends CrossSbtModule {
+  // Define the project dependencies
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"edu.berkeley.cs::chisel3:${versions.chisel3}"
   )
+  // Define the project plugin dependencies
   override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
     ivy"edu.berkeley.cs:::chisel3-plugin:${versions.chisel3}"
   )
   object test extends Tests {
+    // Define the project test dependencies
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"org.scalatest::scalatest:${versions.scalatest}",
       ivy"edu.berkeley.cs::chiseltest:${versions.chiseltest}"
@@ -51,7 +52,7 @@ trait CodeQuality extends ScalafmtModule with ScalafixModule {
   )
 }
 
-trait ScalacOptions extends CrossSbtModule {
+trait ScalacOptions extends ScalaModule {
   override def scalacOptions = T {
     super.scalacOptions() ++ Seq(
       "-unchecked",
@@ -80,4 +81,4 @@ def deps(ev: eval.Evaluator) = T.command {
 }
 
 // Final object definition
-object toplevel extends CrossSbtModule with BaseProject with HasChisel3 with CodeQuality with ScalacOptions {}
+object toplevel extends ScalaModule with BaseProject with CodeQuality with ScalacOptions {}
