@@ -5,38 +5,37 @@ import $ivy.`com.goyeau::mill-scalafix::0.2.10`
 import com.goyeau.mill.scalafix.ScalafixModule
 
 object versions {
+  val scala           = "2.13.8"
   val chisel3         = "3.5.4"
   val chiseltest      = "0.5.4"
   val scalatest       = "3.2.13"
   val organizeimports = "0.6.0"
-  val scalautils      = "0.10.2"
-  val oslib           = "0.8.1"
   val semanticdb      = "4.5.13"
 }
 
 trait BaseProject extends ScalaModule {
-  def scalaVersion = "2.13.8"
+  def scalaVersion = versions.scala
   def mainClass    = Some("Toplevel")
 
-  def repositoriesTask = T.task {
+  def repositoriesTask = T.task { // Add snapshot repositories in case needed
     super.repositoriesTask() ++ Seq("oss", "s01.oss")
-      .map("https://" + _ + ".sonatype.org/content/repositories/snapshots")
+      .map(r => s"https://$r.sonatype.org/content/repositories/snapshots")
       .map(MavenRepository(_))
   }
 
   // Define the project dependencies
   def ivyDeps = super.ivyDeps() ++ Agg(
-    ivy"edu.berkeley.cs::chisel3:${versions.chisel3}"
+    ivy"edu.berkeley.cs::chisel3:${versions.chisel3}",
   )
   // Define the project plugin dependencies
   override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
-    ivy"edu.berkeley.cs:::chisel3-plugin:${versions.chisel3}"
+    ivy"edu.berkeley.cs:::chisel3-plugin:${versions.chisel3}",
   )
   object test extends Tests {
     // Define the project test dependencies
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"org.scalatest::scalatest:${versions.scalatest}",
-      ivy"edu.berkeley.cs::chiseltest:${versions.chiseltest}"
+      ivy"edu.berkeley.cs::chiseltest:${versions.chiseltest}",
     )
     def testFramework = "org.scalatest.tools.Framework"
     def testOne(args: String*) = T.command {
@@ -48,7 +47,7 @@ trait BaseProject extends ScalaModule {
 trait CodeQuality extends ScalafmtModule with ScalafixModule {
   def scalafixIvyDeps = Agg(ivy"com.github.liancheng::organize-imports:${versions.organizeimports}")
   override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
-    ivy"org.scalameta:::semanticdb-scalac:${versions.semanticdb}"
+    ivy"org.scalameta:::semanticdb-scalac:${versions.semanticdb}",
   )
 }
 
@@ -63,7 +62,7 @@ trait ScalacOptions extends ScalaModule {
       "-Xfatal-warnings",
       "-Ywarn-dead-code",
       "-Ywarn-unused",
-      "-P:chiselplugin:genBundleElements"
+      "-P:chiselplugin:genBundleElements",
     )
   }
 }
@@ -73,7 +72,7 @@ def lint(ev: eval.Evaluator) = T.command {
   mill.main.MainModule.evaluateTasks(
     ev,
     Seq("__.fix", "+", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll", "__.sources"),
-    mill.define.SelectMode.Separated
+    mill.define.SelectMode.Separated,
   )(identity)
 }
 def deps(ev: eval.Evaluator) = T.command {
