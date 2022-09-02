@@ -68,5 +68,6 @@ tmp
 /*.fir
 /*.v
 /*.f
+/*.anno.json
 /*.vcd
 /obj_dir

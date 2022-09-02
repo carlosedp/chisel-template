@@ -12,10 +12,16 @@ jobs:
     steps:
     - name: Install Verilator
       run: sudo apt-get install -y verilator
-    - uses: actions/checkout@v2
-    - name: Setup Scala
-      uses: olafurpg/setup-scala@v13
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup Java
+      uses: actions/setup-java@v3
       with:
-        java-version: adopt@1.11
+        distribution: 'temurin'
+        java-version: '11'
+        cache: 'java'
+
     - name: Run automated tests
-      run: sbt test
+      run: make test

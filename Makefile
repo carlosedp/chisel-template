@@ -1,8 +1,8 @@
 # Source and target files/directories
-project = $(shell grep object build.sc |grep -v extends |sed s/object//g |xargs)
+project = $(shell grep object build.sc |tail -1 |cut -d" " -f2 |xargs)
 scala_files = $(wildcard src/main/scala/*.scala)
 generated_files = generated					# Destination directory for generated files
-BUILDTOOL ?= sbt 							# Can also be mill
+BUILDTOOL ?= mill 							# Can also be mill
 
 # Toolchains
 DOCKERARGS  = run --rm -v $(PWD):/src -w /src
@@ -25,7 +25,7 @@ BOARD := bypass
 #	BOARDPARAMS=-board ${BOARD} -cpufreq 25000000 -invreset false
 
 # Targets
-chisel: $(generated_files) ## Generates Verilog code from Chisel sources using SBT
+chisel: $(generated_files) ## Generates Verilog code from Chisel sources (output to ./generated)
 
 $(generated_files): $(scala_files) build.sc build.sbt
 	@rm -rf $(generated_files)
@@ -42,6 +42,7 @@ chisel_tests:
     elif [ $(BUILDTOOL) = "mill" ]; then \
 		scripts/mill $(project).test; \
 	fi
+	@echo "If using WriteVcdAnnotation in your tests, the VCD files are generated in ./test_run_dir/testname directories."
 
 test: chisel_tests ## Run Chisel tests
 check: chisel_tests
@@ -55,10 +56,14 @@ dot: $(generated_files) ## Generate dot files for Core
 	@$(YOSYS) -p "read_verilog ./generated/*.v; proc; opt; show -colors 2 -width -format dot -prefix $(MODULE) -signed $(MODULE)"
 
 clean:   ## Clean all generated files
+	@if [ $(BUILDTOOL) = "sbt" ]; then \
+		${SBT} "clean"; \
+    elif [ $(BUILDTOOL) = "mill" ]; then \
+		scripts/mill clean; \
+	fi
 	@rm -rf obj_dir test_run_dir target
 	@rm -rf $(generated_files)
 	@rm -rf out
-	@rm -f chiselv
 	@rm -f *.mem
 
 cleancache: clean  ## Clean all downloaded dependencies and cache
