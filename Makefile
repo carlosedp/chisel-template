@@ -4,7 +4,7 @@ scala_files = $(wildcard $(project)/src/*.scala) $(wildcard $(project)/resources
 generated_files = generated					# Destination directory for generated files
 
 # Toolchains and tools
-MILL = ./mill -j 4
+MILL = ./mill
 DOCKERARGS  = run --rm -v $(PWD):/src -w /src
 
 # Define utility applications for simulation
@@ -19,16 +19,17 @@ endif
 
 # Default board PLL and parameters to be passed to Chisel (require parsing at Toplevel)
 BOARD := bypass
-# BOARDPARAMS=-board ${BOARD} -cpufreq 25000000 -invreset false
+# Chisel Params below are:
+# --target:fpga -> https://github.com/chipsalliance/firrtl/blob/82da33135fcac1a81e8ea95f47626e80b4e80fd1/src/main/scala/firrtl/stage/FirrtlCompilerTargets.scala
+# --emission-options=disableMemRandomization,disableRegisterRandomization -> https://github.com/chipsalliance/firrtl/pull/2396
 CHISELPARAMS = --target:fpga --emission-options=disableMemRandomization,disableRegisterRandomization
 
 # Targets
-
 chisel: $(generated_files) ## Generates Verilog code from Chisel sources (output to ./generated)
 $(generated_files): $(scala_files) build.sc Makefile
 	@rm -rf $@
 	@test "$(BOARD)" != "bypass" || (printf "Generating design with bypass PLL (for simulation). If required, set BOARD and PLLFREQ variables to one of the supported boards: .\n" ; test -f project.core && cat project.core|grep "\-board"|cut -d '-' -f 4 | grep -v bypass | sed s/board\ //g |tr -s '\n' ','| sed 's/,$$/\n/'; echo "Eg. make chisel BOARD=ulx3s PLLFREQ=15000000"; echo)
-	$(MILL) $(project).run $(CHISELPARAMS) -td $@ $(BOARDPARAMS)
+	$(MILL) $(project).run $(CHISELPARAMS) -td $@
 
 check: test
 .PHONY: test
