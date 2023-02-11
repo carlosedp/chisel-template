@@ -14,9 +14,10 @@ Chisel Learning Resources:
 
 Software requirements:
 
-- Java JDK
-- Verilator (as an option for simulation)
-- GTKWave (to visualize VCD files)
+- Java JDK (<https://adoptium.net/installation/>) - Mandatory
+- Gnu Make to run the generation targets
+- Verilator (as an option for simulation) - Optional
+- GTKWave (to visualize VCD files) - Optional
 
 ## Generating Verilog
 

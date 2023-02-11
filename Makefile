@@ -39,11 +39,11 @@ test:## Run Chisel tests
 
 .PHONY: lint
 lint: ## Formats code using scalafmt and scalafix
-	$(MILL) lint
+	$(MILL) run lint
 
 .PHONY: deps
 deps: ## Check for library version updates
-	$(MILL) deps
+	$(MILL) run deps
 
 MODULE ?= Toplevel
 dot: $(generated_files) ## Generate dot files for Core

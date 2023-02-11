@@ -2,15 +2,15 @@ import mill._, mill.scalalib._
 import mill.scalalib.TestModule.ScalaTest
 import scalafmt._
 import coursier.maven.MavenRepository
-import $ivy.`com.goyeau::mill-scalafix::0.2.10`
+import $ivy.`com.goyeau::mill-scalafix::0.2.11`
 import com.goyeau.mill.scalafix.ScalafixModule
 
 // Define the library versions
 object versions {
   val scala           = "2.13.8"
-  val chisel3         = "3.5.4"
-  val chiseltest      = "0.5.4"
-  val scalatest       = "3.2.13"
+  val chisel3         = "3.5.5"
+  val chiseltest      = "0.5.5"
+  val scalatest       = "3.2.15"
   val organizeimports = "0.6.0"
   val semanticdb      = "4.5.13"
 }
@@ -66,14 +66,36 @@ object toplevel extends ScalaModule with BaseProject with ScalacOptions {
   def projectName = "toplevel"
 }
 
-// Toplevel commands
-def lint(ev: eval.Evaluator) = T.command {
-  mill.main.MainModule.evaluateTasks(
-    ev,
-    Seq("__.fix", "+", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll", "__.sources"),
-    mill.define.SelectMode.Separated,
-  )(identity)
-}
-def deps(ev: eval.Evaluator) = T.command {
-  mill.scalalib.Dependency.showUpdates(ev)
+// -----------------------------------------------------------------------------
+// Command Aliases
+// -----------------------------------------------------------------------------
+// Alias commands are run like `./mill run [alias]`
+// Define the alias as a map element containing the alias name and a Seq with the tasks to be executed
+val aliases: Map[String, Seq[String]] = Map(
+  "lint" -> Seq(
+    "__.fix",
+    "mill.scalalib.scalafmt.ScalafmtModule/reformatAll __.sources",
+  ),
+  "deps"     -> Seq("mill.scalalib.Dependency/showUpdates"),
+  "checkfmt" -> Seq("mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources"),
+  "test"  -> Seq("__.test"),
+)
+
+// The toplevel alias runner
+def run(ev: eval.Evaluator, alias: String = "") = T.command {
+  if (alias == "") {
+    println("Use './mill run [alias]'.\nAvailable aliases:");
+    aliases.foreach(x => println(x._1 + " " * (15 - x._1.length) + " - Commands: (" + x._2.mkString(", ") + ")"))
+    sys.exit(1)
+  }
+  aliases.get(alias) match {
+    case Some(t) =>
+      mill.main.MainModule.evaluateTasks(
+        ev,
+        t.flatMap(x => x +: Seq("+")).flatMap(x => x.split(" ")).dropRight(1),
+        mill.define.SelectMode.Separated,
+      )(identity)
+    case None => println(s"${Console.RED}ERROR:${Console.RESET} The task alias \"$alias\" does not exist.")
+  }
+  ()
 }
